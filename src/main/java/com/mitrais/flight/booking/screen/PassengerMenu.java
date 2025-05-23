@@ -1,10 +1,15 @@
 package com.mitrais.flight.booking.screen;
 
 import com.mitrais.flight.booking.pojo.Destination;
+import com.mitrais.flight.booking.pojo.FlightBooking;
+import com.mitrais.flight.booking.pojo.FlightBookingDetail;
+import com.mitrais.flight.booking.pojo.FlightRoute;
 import com.mitrais.flight.booking.service.AdminService;
+import com.mitrais.flight.booking.service.FlightBookingService;
 import com.mitrais.flight.booking.service.PassengerService;
+import com.mitrais.flight.booking.util.StringUtils;
 
-import java.util.Scanner;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class PassengerMenu {
@@ -12,11 +17,13 @@ public class PassengerMenu {
     private final Scanner scanner;
     private final AdminService adminService;
     private final PassengerService passengerService;
+    private final FlightBookingService flightBookingService;
 
-    public PassengerMenu(Scanner scanner, AdminService adminService, PassengerService passengerService) {
+    public PassengerMenu(Scanner scanner, AdminService adminService, PassengerService passengerService, FlightBookingService flightBookingService) {
         this.scanner = scanner;
         this.adminService = adminService;
         this.passengerService = passengerService;
+        this.flightBookingService = flightBookingService;
     }
 
     public void showPassengerPanel() {
@@ -67,7 +74,85 @@ public class PassengerMenu {
         String destinationCity = scanner.nextLine();
         Destination to = adminService.getMapDestination().get(destinationCity);
 
-        passengerService.searchFlight(adminService.getFlightRoutes(), from, to);
+        List<FlightBookingDetail> currentBookingDetails = flightBookingService.retrieveAllBookingDetail(from, to);
+        List<FlightRoute> results = passengerService.searchFlight(adminService.getFlightRoutes(), currentBookingDetails, from, to);
+        if (!results.isEmpty()) {
+            System.out.print("Confirm booking? (y/n): ");
+            String confirm = scanner.next();
+            if (confirm.equalsIgnoreCase("y")) {
+                int day = 1;
+                int sequence = 0;
+                String sequenceStr;
+
+                List<FlightBookingDetail> bookingDetails = new ArrayList<>();
+                List<FlightBookingDetail> bookedDetails;
+                for (FlightRoute result : results) {
+                    FlightBookingDetail detail = FlightBookingDetail.builder()
+                            .seat(1)
+                            .flightRoute(result)
+                            .build();
+
+                    day = result.getScheduleDay();
+                    bookedDetails = flightBookingService.findByBookedFlightRoute(result);
+                    if (bookedDetails == null) {
+                        bookingDetails.add(detail);
+                        continue;
+                    }
+
+                    sequence = bookedDetails.size();
+                    OptionalInt maxSeat = bookedDetails.stream()
+                            .mapToInt(FlightBookingDetail::getSeat)
+                            .max();
+
+                    detail.setSeat(maxSeat.orElse(1) + 1);
+                    bookingDetails.add(detail);
+                }
+
+                sequenceStr = StringUtils.paddingZeroString(String.valueOf(sequence + 1), 3);
+                String bookingId = from.getCode() + "-" + to.getCode() + "-" + sequenceStr;
+
+                FlightBooking booking = FlightBooking.builder()
+                        .bookingId(bookingId)
+                        .isDirectFlight(results.size() == 1)
+                        .passengerName(passengerName)
+                        .from(from)
+                        .to(to)
+                        .details(bookingDetails)
+                        .build();
+
+                flightBookingService.addFlightBooking(booking);
+
+                System.out.printf("Booking confirmed! Booking ID: %s\n", bookingId);
+                if (booking.isDirectFlight()) {
+                    System.out.printf("Details: %s -> %s on Day %d, Seat #%d\n\n",
+                            from.getName(),
+                            to.getName(),
+                            day,
+                            bookingDetails.get(0).getSeat());
+                } else {
+                    Map<Destination, List<Destination>> graph = new HashMap<>();
+                    for (FlightRoute route : results) {
+                        graph.computeIfAbsent(route.getDepartureCity(), k -> new ArrayList<>()).add(route.getDestinationCity());
+                    }
+
+                    List<Destination> listRoute = graph.get(from);
+                    String route = listRoute.stream()
+                            .map(Destination::getName)
+                            .collect(Collectors.joining(" -> "));
+                    System.out.printf("Details: %s on Day %d\n", route, day);
+
+                    for (FlightBookingDetail detail : bookingDetails) {
+                        System.out.printf("Seat #%d on %s -> %s\n",
+                                detail.getSeat(),
+                                detail.getFlightRoute().getDepartureCity().getName(),
+                                detail.getFlightRoute().getDestinationCity().getName());
+                    }
+                }
+            } else {
+                showPassengerPanel(passengerName);
+            }
+        }
+
         showPassengerPanel(passengerName);
     }
 

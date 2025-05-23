@@ -1,6 +1,7 @@
 package com.mitrais.flight.booking.service;
 
 import com.mitrais.flight.booking.pojo.Destination;
+import com.mitrais.flight.booking.pojo.FlightBookingDetail;
 import com.mitrais.flight.booking.pojo.FlightRoute;
 import lombok.Getter;
 import lombok.Setter;
@@ -11,33 +12,40 @@ import java.util.*;
 @Setter
 public class PassengerService {
 
-    public void searchFlight(List<FlightRoute> flightRoutes, Destination from, Destination to) {
+    public List<FlightRoute> searchFlight(List<FlightRoute> flightRoutes, List<FlightBookingDetail> currentBookingDetails, Destination from, Destination to) {
         System.out.println("Searching for flights...");
         if (from == null || to == null) {
             System.out.println("Invalid city name.");
-            return;
+            return null;
         }
 
-        List<FlightRoute> directFlights = new ArrayList<>();
+        List<FlightRoute> directFlights = flightRoutes.stream()
+                .filter(flightRoute -> flightRoute.getDepartureCity().equals(from)
+                        && flightRoute.getDestinationCity().equals(to))
+                .toList();
 
-        // Collect all direct flights
-        for (FlightRoute route : flightRoutes) {
-            if (route.getDepartureCity().equals(from) && route.getDestinationCity().equals(to)) {
-                directFlights.add(route);
-            }
-        }
-
-        if (!directFlights.isEmpty()) {
-            System.out.println("== DIRECT FLIGHT(S) ==");
-            for (FlightRoute route : directFlights) {
-                System.out.println("Direct flight: " + route.getDepartureCity().getName() + " -> " +
-                        route.getDestinationCity().getName() + " (Day " + route.getScheduleDay() + ")");
-                System.out.println("Aircraft: " + route.getAircraft().getName() + ", Seats: " + route.getAircraft().getSeatCapacity());
-            }
-
-            return;
-        } else {
+        if (directFlights.isEmpty()) {
             System.out.println("No direct flights found.");
+        } else {
+            for (FlightRoute route : directFlights) {
+                System.out.printf("Found direct flight: %s -> %s (Day: %d)\n",
+                        route.getDepartureCity().getName(),
+                        route.getDestinationCity().getName(),
+                        route.getScheduleDay());
+
+                long bookedSeats = 0;
+                if (currentBookingDetails != null && !currentBookingDetails.isEmpty()) {
+                    bookedSeats = currentBookingDetails.stream()
+                            .filter(booked -> booked.getFlightRoute().getDepartureCity().getName().equals(route.getDepartureCity().getName())
+                                    && booked.getFlightRoute().getDestinationCity().getName().equals(route.getDestinationCity().getName()))
+                            .count();
+                }
+
+                int availableSeats = route.getAircraft().getSeatCapacity() - (int) bookedSeats;
+                System.out.printf("%d seats available\n", availableSeats);
+            }
+
+            return directFlights;
         }
 
         Map<Destination, List<FlightRoute>> graph = new HashMap<>();
@@ -55,13 +63,13 @@ public class PassengerService {
             queue.add(initialPath);
         }
 
+        List<FlightRoute> transitFlight = null;
         while (!queue.isEmpty()) {
             List<FlightRoute> path = queue.poll();
             FlightRoute lastLeg = path.get(path.size() - 1);
             Destination current = lastLeg.getDestinationCity();
 
             if (current.equals(to)) {
-                System.out.println("No direct flight found.");
                 System.out.print("Found transit route: ");
                 System.out.print(from.getName());
                 for (FlightRoute leg : path) {
@@ -74,7 +82,8 @@ public class PassengerService {
                             leg.getDepartureCity().getName() + " to " +
                             leg.getDestinationCity().getName());
                 }
-                return;
+
+                return transitFlight;
             }
 
             if (!visited.contains(current)) {
@@ -88,6 +97,8 @@ public class PassengerService {
         }
 
         System.out.println("No available flight path found from " + from + " to " + to + ".");
+
+        return null;
     }
 
 }

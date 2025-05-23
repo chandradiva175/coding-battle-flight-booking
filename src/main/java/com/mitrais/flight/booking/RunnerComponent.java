@@ -3,6 +3,7 @@ package com.mitrais.flight.booking;
 import com.mitrais.flight.booking.screen.AdminMenu;
 import com.mitrais.flight.booking.screen.PassengerMenu;
 import com.mitrais.flight.booking.service.AdminService;
+import com.mitrais.flight.booking.service.FlightBookingService;
 import com.mitrais.flight.booking.service.PassengerService;
 import lombok.Getter;
 import org.springframework.boot.CommandLineRunner;
@@ -20,15 +21,17 @@ public class RunnerComponent implements CommandLineRunner {
 
     private static AdminService adminService;
     private static PassengerService passengerService;
+    private static FlightBookingService flightBookingService;
 
     @Override
     public void run(String... args) {
         scanner = new Scanner(System.in);
         adminService = new AdminService();
         passengerService = new PassengerService();
+        flightBookingService = new FlightBookingService();
 
         adminMenu = new AdminMenu(scanner, adminService);
-        passengerMenu = new PassengerMenu(scanner, adminService, passengerService);
+        passengerMenu = new PassengerMenu(scanner, adminService, passengerService, flightBookingService);
 
         adminService.initializeData();
 

@@ -8,6 +8,12 @@ import lombok.Setter;
 public class Destination {
 
     private String name;
+    private String code;
+
+    public String getCode() {
+        if (name.length() > 3) return name.substring(0, 3).toUpperCase();
+        else return name.toUpperCase();
+    }
 
     @Override
     public boolean equals(Object obj) {
