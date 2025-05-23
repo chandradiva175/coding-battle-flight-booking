@@ -19,6 +19,67 @@ public class AdminService {
     private List<Destination> destinations;
     private List<FlightRoute> flightRoutes;
 
+    public void initializeData() {
+        Aircraft aircraft = new Aircraft();
+        aircraft.setName("Lion Air");
+        aircraft.setSeatCapacity(10);
+        addAircraft(aircraft);
+
+        aircraft = new Aircraft();
+        aircraft.setName("Batik Air");
+        aircraft.setSeatCapacity(15);
+        addAircraft(aircraft);
+
+        aircraft = new Aircraft();
+        aircraft.setName("Garuda");
+        aircraft.setSeatCapacity(20);
+        addAircraft(aircraft);
+
+        aircraft = new Aircraft();
+        aircraft.setName("Citilink");
+        aircraft.setSeatCapacity(15);
+        addAircraft(aircraft);
+
+        Destination destination = new Destination();
+        destination.setName("Jakarta");
+        addDestination(destination);
+
+        destination = new Destination();
+        destination.setName("Bali");
+        addDestination(destination);
+
+        destination = new Destination();
+        destination.setName("Surabaya");
+        addDestination(destination);
+
+        destination = new Destination();
+        destination.setName("Makassar");
+        addDestination(destination);
+
+        FlightRoute route = new FlightRoute();
+        route.setDepartureCity(getMapDestination().get("Jakarta"));
+        route.setDestinationCity(getMapDestination().get("Bali"));
+        route.setAircraft(getMapAircraft().get("Lion Air"));
+        route.setScheduleDay(2);
+        addFlightRoute(route);
+
+        route = new FlightRoute();
+        route.setDepartureCity(getMapDestination().get("Jakarta"));
+        route.setDestinationCity(getMapDestination().get("Surabaya"));
+        route.setAircraft(getMapAircraft().get("Batik Air"));
+        route.setScheduleDay(2);
+        addFlightRoute(route);
+
+        route = new FlightRoute();
+        route.setDepartureCity(getMapDestination().get("Surabaya"));
+        route.setDestinationCity(getMapDestination().get("Makassar"));
+        route.setAircraft(getMapAircraft().get("Lion Air"));
+        route.setScheduleDay(2);
+        addFlightRoute(route);
+
+        System.out.println("initialize data done");
+    }
+
     public void incrementDay() {
         day++;
     }
