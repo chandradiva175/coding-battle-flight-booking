@@ -3,15 +3,14 @@ package com.mitrais.flight.booking.util;
 public class StringUtils {
 
     public static String paddingZeroString(String param, int length) {
-        String result = param;
-        if (result.length() == length) return result;
+        if (param.length() == length) return param;
 
-        String paddingZero = "";
-        for (int i = 0; i < (length - result.length()); i++) {
-            paddingZero = "0" + paddingZero;
+        StringBuilder paddingZero = new StringBuilder();
+        for (int i = 0; i < (length - param.length()); i++) {
+            paddingZero.insert(0, "0");
         }
 
-        return paddingZero + result;
+        return paddingZero + param;
     }
 
 }

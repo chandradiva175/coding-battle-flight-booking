@@ -1,5 +1,6 @@
 package com.mitrais.flight.booking.screen;
 
+import com.mitrais.flight.booking.RunnerComponent;
 import com.mitrais.flight.booking.pojo.Destination;
 import com.mitrais.flight.booking.pojo.FlightBooking;
 import com.mitrais.flight.booking.pojo.FlightBookingDetail;
@@ -7,6 +8,7 @@ import com.mitrais.flight.booking.pojo.FlightRoute;
 import com.mitrais.flight.booking.service.AdminService;
 import com.mitrais.flight.booking.service.FlightBookingService;
 import com.mitrais.flight.booking.service.PassengerService;
+import com.mitrais.flight.booking.util.BookingStatus;
 import com.mitrais.flight.booking.util.StringUtils;
 
 import java.util.*;
@@ -48,11 +50,18 @@ public class PassengerMenu {
         int option = scanner.nextInt();
         switch (option) {
             case 1:
+                if (!adminService.isBookingServiceActive()) {
+                    System.out.println("\nBooking Service not active\n");
+                    showPassengerPanel(passengerName);
+                    break;
+                }
+
                 showBookFlight(passengerName);
                 break;
             case 2:
                 break;
             default:
+                RunnerComponent.showWelcomeScreen();
                 break;
         }
     }
@@ -74,9 +83,9 @@ public class PassengerMenu {
         String destinationCity = scanner.nextLine();
         Destination to = adminService.getMapDestination().get(destinationCity);
 
-        List<FlightBookingDetail> currentBookingDetails = flightBookingService.retrieveAllBookingDetail(from, to);
+        List<FlightBookingDetail> currentBookingDetails = flightBookingService.retrieveAllBookingDetail();
         List<FlightRoute> results = passengerService.searchFlight(adminService.getFlightRoutes(), currentBookingDetails, from, to);
-        if (!results.isEmpty()) {
+        if (results != null && !results.isEmpty()) {
             System.out.print("Confirm booking? (y/n): ");
             String confirm = scanner.next();
             if (confirm.equalsIgnoreCase("y")) {
@@ -118,6 +127,7 @@ public class PassengerMenu {
                         .from(from)
                         .to(to)
                         .details(bookingDetails)
+                        .bookingStatus(BookingStatus.BOOKED)
                         .build();
 
                 flightBookingService.addFlightBooking(booking);
@@ -135,12 +145,13 @@ public class PassengerMenu {
                         graph.computeIfAbsent(route.getDepartureCity(), k -> new ArrayList<>()).add(route.getDestinationCity());
                     }
 
-                    List<Destination> listRoute = graph.get(from);
-                    String route = listRoute.stream()
-                            .map(Destination::getName)
-                            .collect(Collectors.joining(" -> "));
-                    System.out.printf("Details: %s on Day %d\n", route, day);
+                    StringBuilder detailRoute = new StringBuilder(from.getName());
+                    for (FlightRoute route : results) {
+                        detailRoute.append(" -> ").append(route.getDestinationCity().getName());
+                        day = route.getScheduleDay();
+                    }
 
+                    System.out.printf("Details: %s on Day %d\n", detailRoute, day);
                     for (FlightBookingDetail detail : bookingDetails) {
                         System.out.printf("Seat #%d on %s -> %s\n",
                                 detail.getSeat(),

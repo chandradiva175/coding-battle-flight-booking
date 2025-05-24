@@ -43,6 +43,8 @@ public class PassengerService {
 
                 int availableSeats = route.getAircraft().getSeatCapacity() - (int) bookedSeats;
                 System.out.printf("%d seats available\n", availableSeats);
+
+                if (availableSeats == 0) return null;
             }
 
             return directFlights;
@@ -70,18 +72,37 @@ public class PassengerService {
             Destination current = lastLeg.getDestinationCity();
 
             if (current.equals(to)) {
+                int day = 1;
                 System.out.print("Found transit route: ");
                 System.out.print(from.getName());
-                for (FlightRoute leg : path) {
-                    System.out.print(" -> " + leg.getDestinationCity().getName());
+                for (FlightRoute route : path) {
+                    System.out.print(" -> " + route.getDestinationCity().getName());
+                    day = route.getScheduleDay();
                 }
-                System.out.println();
-                System.out.println("Aircrafts used:");
-                for (FlightRoute leg : path) {
-                    System.out.println("- " + leg.getAircraft().getName() + " from " +
-                            leg.getDepartureCity().getName() + " to " +
-                            leg.getDestinationCity().getName());
+                System.out.printf(" (Day %d)\n", day);
+
+                boolean seatAvailable = true;
+                for (FlightRoute route : path) {
+                    long bookedSeats = 0;
+                    if (currentBookingDetails != null && !currentBookingDetails.isEmpty()) {
+                        bookedSeats = currentBookingDetails.stream()
+                                .filter(booked -> booked.getFlightRoute().getDepartureCity().getName().equals(route.getDepartureCity().getName())
+                                        && booked.getFlightRoute().getDestinationCity().getName().equals(route.getDestinationCity().getName()))
+                                .count();
+                    }
+
+                    int availableSeats = route.getAircraft().getSeatCapacity() - (int) bookedSeats;
+                    if (availableSeats == 0) seatAvailable = false;
+                    System.out.printf("%d seats available on %s -> %s\n",
+                            availableSeats,
+                            route.getDepartureCity().getName(),
+                            route.getDestinationCity().getName());
+
+                    if (transitFlight == null) transitFlight = new ArrayList<>();
+                    transitFlight.add(route);
                 }
+
+                if (!seatAvailable) return null;
 
                 return transitFlight;
             }
@@ -96,7 +117,7 @@ public class PassengerService {
             }
         }
 
-        System.out.println("No available flight path found from " + from + " to " + to + ".");
+        System.out.println("No transit flights found");
 
         return null;
     }

@@ -1,5 +1,6 @@
 package com.mitrais.flight.booking.pojo;
 
+import com.mitrais.flight.booking.util.BookingStatus;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -17,5 +18,6 @@ public class FlightBooking {
     private Destination from;
     private Destination to;
     private List<FlightBookingDetail> details;
+    private BookingStatus bookingStatus;
 
 }

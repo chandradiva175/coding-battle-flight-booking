@@ -1,9 +1,9 @@
 package com.mitrais.flight.booking.service;
 
-import com.mitrais.flight.booking.pojo.Destination;
 import com.mitrais.flight.booking.pojo.FlightBooking;
 import com.mitrais.flight.booking.pojo.FlightBookingDetail;
 import com.mitrais.flight.booking.pojo.FlightRoute;
+import com.mitrais.flight.booking.util.BookingStatus;
 import lombok.Getter;
 
 import java.util.ArrayList;
@@ -25,6 +25,12 @@ public class FlightBookingService {
         List<FlightBookingDetail> details = null;
 
         if (flightBookings == null) flightBookings = new ArrayList<>();
+        if (!flightBookings.isEmpty()) {
+            flightBookings = flightBookings.stream()
+                    .filter(booking -> booking.getBookingStatus().equals(BookingStatus.BOOKED))
+                    .collect(Collectors.toList());
+        }
+
         for (FlightBooking booking : flightBookings) {
             if (details == null) details = new ArrayList<>();
             details.addAll(booking.getDetails());
@@ -40,13 +46,12 @@ public class FlightBookingService {
         return details;
     }
 
-    public List<FlightBookingDetail> retrieveAllBookingDetail(Destination from, Destination to) {
+    public List<FlightBookingDetail> retrieveAllBookingDetail() {
         List<FlightBookingDetail> details = null;
 
         if (flightBookings == null) return null;
         flightBookings = flightBookings.stream()
-                .filter(booking -> booking.getFrom().getName().equals(from.getName())
-                        && booking.getTo().getName().equals(to.getName()))
+                .filter(booking -> booking.getBookingStatus().equals(BookingStatus.BOOKED))
                 .collect(Collectors.toList());
 
         for (FlightBooking booking : flightBookings) {

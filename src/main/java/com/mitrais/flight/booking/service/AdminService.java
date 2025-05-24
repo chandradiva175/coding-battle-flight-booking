@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 public class AdminService {
 
     private int day = 1;
+    private boolean bookingServiceActive = false;
     private List<Aircraft> aircrafts;
     private List<Destination> destinations;
     private List<FlightRoute> flightRoutes;
@@ -115,6 +116,10 @@ public class AdminService {
     public void addFlightRoute(FlightRoute flightRoute) {
         if (flightRoutes == null) flightRoutes = new ArrayList<>();
         flightRoutes.add(flightRoute);
+    }
+
+    public void activateBookingService() {
+        bookingServiceActive = true;
     }
 
 }

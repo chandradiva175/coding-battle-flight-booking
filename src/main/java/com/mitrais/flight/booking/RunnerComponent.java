@@ -53,9 +53,7 @@ public class RunnerComponent implements CommandLineRunner {
         } else if (option == 2) {
             passengerMenu.showPassengerPanel();
         } else {
-            System.out.println();
-            System.out.println("Invalid option");
-            System.out.println();
+            System.out.println("\nInvalid option\n");
             showWelcomeScreen();
         }
     }

@@ -44,6 +44,12 @@ public class AdminMenu {
                 showCreateFlightRoute();
                 break;
             case 4:
+                adminService.activateBookingService();
+                System.out.println("== RUN BOOKING SERVICE ==");
+                System.out.println("Booking service is now running.");
+                System.out.println("Passengers can now make bookings\n");
+
+                showAdminPanel();
                 break;
             case 5:
                 adminService.incrementDay();
@@ -67,6 +73,7 @@ public class AdminMenu {
         System.out.println("== REGISTER AIRCRAFT ==");
         System.out.print("Enter aircraft name: ");
         String name = scanner.nextLine();
+
         System.out.print("Enter seat capacity: ");
         int capacity = scanner.nextInt();
 
@@ -123,10 +130,13 @@ public class AdminMenu {
         System.out.println("Available destinations: " + availDestination);
         System.out.print("Enter departure city: ");
         String departureCity = scanner.nextLine();
+
         System.out.print("Enter destination city: ");
         String destinationCity = scanner.nextLine();
+
         System.out.print("Select aircraft: ");
         String aircraft = scanner.nextLine();
+
         System.out.print("Enter scheduled day: ");
         int scheduleDay = scanner.nextInt();
 
