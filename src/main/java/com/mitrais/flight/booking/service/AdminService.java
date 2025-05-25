@@ -78,6 +78,8 @@ public class AdminService {
         route.setScheduleDay(2);
         addFlightRoute(route);
 
+        activateBookingService();
+
         System.out.println("initialize data done");
     }
 

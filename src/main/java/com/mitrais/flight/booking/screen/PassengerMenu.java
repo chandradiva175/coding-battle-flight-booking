@@ -59,6 +59,7 @@ public class PassengerMenu {
                 showBookFlight(passengerName);
                 break;
             case 2:
+                showCancelBooking(passengerName);
                 break;
             default:
                 RunnerComponent.showWelcomeScreen();
@@ -165,6 +166,68 @@ public class PassengerMenu {
         }
 
         showPassengerPanel(passengerName);
+    }
+
+    public void showCancelBooking(String passengerName) {
+        System.out.println("== CANCEL A BOOKING ==");
+        System.out.println("Your bookings:");
+
+        List<FlightBooking> bookings = flightBookingService.retrieveAllBookingByPassenger(passengerName);
+        if (bookings == null || bookings.isEmpty()) {
+            showPassengerPanel(passengerName);
+            return;
+        }
+
+        int no = 1;
+        for (FlightBooking booking : bookings) {
+            int day = 1;
+            StringBuilder detailRoute = new StringBuilder(booking.getFrom().getName());
+            for (FlightBookingDetail detail : booking.getDetails()) {
+                detailRoute.append(" -> ").append(detail.getFlightRoute().getDestinationCity().getName());
+                day = detail.getFlightRoute().getScheduleDay();
+            }
+
+            System.out.printf("%d. %s: %s on Day %d\n", no, booking.getBookingId(), detailRoute, day);
+            no++;
+        }
+
+        System.out.print("Select booking to cancel (enter ID): ");
+        String bookingId = scanner.next();
+        FlightBooking booking = flightBookingService.retrieveAllBookingByBookingId(passengerName, bookingId);
+        if (booking == null) {
+            System.out.printf("Booking ID: %s, not found\n\n", bookingId);
+            showPassengerPanel(passengerName);
+            return;
+        }
+
+        System.out.println("Booking details:");
+        int day = 1;
+        StringBuilder detailRoute = new StringBuilder(booking.getFrom().getName());
+        for (FlightBookingDetail detail : booking.getDetails()) {
+            detailRoute.append(" -> ").append(detail.getFlightRoute().getDestinationCity().getName());
+            day = detail.getFlightRoute().getScheduleDay();
+        }
+
+        System.out.printf("%s on Day %d\n", detailRoute, day);
+        for (FlightBookingDetail detail : booking.getDetails()) {
+            System.out.printf("Seat #%d on %s -> %s\n",
+                    detail.getSeat(),
+                    detail.getFlightRoute().getDepartureCity().getName(),
+                    detail.getFlightRoute().getDestinationCity().getName());
+        }
+
+        System.out.print("Confirm cancellation? (y/n): ");
+        String confirm = scanner.next();
+        if (confirm.equalsIgnoreCase("y")) {
+            flightBookingService.cancelBooking(passengerName, bookingId);
+
+            System.out.printf("Booking %s has been cancelled.\n", bookingId);
+            System.out.println("All seats have been released and are now available");
+
+            showPassengerPanel(passengerName);
+        } else {
+            showPassengerPanel(passengerName);
+        }
     }
 
 }

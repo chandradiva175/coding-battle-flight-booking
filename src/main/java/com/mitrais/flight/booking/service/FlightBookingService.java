@@ -62,4 +62,29 @@ public class FlightBookingService {
         return details;
     }
 
+    public List<FlightBooking> retrieveAllBookingByPassenger(String passengerName) {
+        if (flightBookings == null) return null;
+        return flightBookings.stream()
+                .filter(booking -> booking.getBookingStatus().equals(BookingStatus.BOOKED)
+                        && booking.getPassengerName().equals(passengerName))
+                .collect(Collectors.toList());
+    }
+
+    public FlightBooking retrieveAllBookingByBookingId(String passengerName, String bookingId) {
+        if (flightBookings == null) return null;
+        return flightBookings.stream()
+                .filter(booking -> booking.getBookingStatus().equals(BookingStatus.BOOKED)
+                        && booking.getPassengerName().equals(passengerName) && booking.getBookingId().equals(bookingId))
+                .findAny().orElse(null);
+    }
+
+    public void cancelBooking(String passengerName, String bookingId) {
+        if (flightBookings != null) {
+            flightBookings.stream()
+                    .filter(flightBooking -> flightBooking.getPassengerName().equals(passengerName)
+                            && flightBooking.getBookingId().equals(bookingId))
+                    .forEach(flightBooking -> flightBooking.setBookingStatus(BookingStatus.CANCELLED));
+        }
+    }
+
 }
