@@ -1,11 +1,11 @@
 package com.mitrais.flight.booking.screen;
 
 import com.mitrais.flight.booking.RunnerComponent;
-import com.mitrais.flight.booking.pojo.Aircraft;
-import com.mitrais.flight.booking.pojo.Destination;
-import com.mitrais.flight.booking.pojo.FlightRoute;
+import com.mitrais.flight.booking.pojo.*;
 import com.mitrais.flight.booking.service.AdminService;
+import com.mitrais.flight.booking.service.FlightBookingService;
 
+import java.util.List;
 import java.util.Scanner;
 import java.util.stream.Collectors;
 
@@ -13,10 +13,12 @@ public class AdminMenu {
 
     private final Scanner scanner;
     private final AdminService adminService;
+    private final FlightBookingService flightBookingService;
 
-    public AdminMenu(Scanner scanner, AdminService adminService) {
+    public AdminMenu(Scanner scanner, AdminService adminService, FlightBookingService flightBookingService) {
         this.scanner = scanner;
         this.adminService = adminService;
+        this.flightBookingService = flightBookingService;
     }
 
     public void showAdminPanel() {
@@ -57,8 +59,7 @@ public class AdminMenu {
                 System.out.println("== NEXT DAY ==");
                 System.out.println("Advancing to the next day...");
                 System.out.printf("Current day is now: %d\n", adminService.getDay());
-                // todo check current flight schedule for today
-                // todo check current flight schedule for tomorrow
+                showCurrentAndTomorrowBookedFlight();
                 break;
             case 6:
                 break;
@@ -156,6 +157,35 @@ public class AdminMenu {
                 flightRoute.getDestinationCity().getName(),
                 flightRoute.getAircraft().getName(),
                 flightRoute.getScheduleDay());
+
+        showAdminPanel();
+    }
+
+    public void showCurrentAndTomorrowBookedFlight() {
+        int currentDay = adminService.getDay();
+        List<FlightBooking> bookings = flightBookingService.findBookingByTodayAndTomorrow(currentDay);
+        if (bookings == null) {
+            showAdminPanel();
+            return;
+        }
+
+        for (FlightBooking booking : bookings) {
+            if (booking.isDirectFlight()) {
+                System.out.printf("Flight %s -> %s is scheduled for %s.\n",
+                        booking.getFrom().getName(),
+                        booking.getTo().getName(),
+                        booking.getScheduleDay() == currentDay ? "today" : "tomorrow");
+            } else {
+                StringBuilder detailRoute = new StringBuilder(booking.getFrom().getName());
+                for (FlightBookingDetail detail : booking.getDetails()) {
+                    detailRoute.append(" -> ").append(detail.getFlightRoute().getDestinationCity().getName());
+                }
+
+                System.out.printf("Flight %s is scheduled for %s\n",
+                        detailRoute,
+                        booking.getScheduleDay() == currentDay ? "today" : "tomorrow");
+            }
+        }
 
         showAdminPanel();
     }

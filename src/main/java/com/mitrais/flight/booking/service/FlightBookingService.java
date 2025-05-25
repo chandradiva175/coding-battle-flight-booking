@@ -87,4 +87,13 @@ public class FlightBookingService {
         }
     }
 
+    public List<FlightBooking> findBookingByTodayAndTomorrow(int currentDay) {
+        if (flightBookings == null) return null;
+        return flightBookings.stream()
+                .filter(flightBooking ->  flightBooking.getScheduleDay() == currentDay
+                        || flightBooking.getScheduleDay() == (currentDay + 1))
+                .sorted(Comparator.comparingInt(FlightBooking::getScheduleDay))
+                .collect(Collectors.toList());
+    }
+
 }

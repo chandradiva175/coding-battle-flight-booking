@@ -30,7 +30,7 @@ public class RunnerComponent implements CommandLineRunner {
         passengerService = new PassengerService();
         flightBookingService = new FlightBookingService();
 
-        adminMenu = new AdminMenu(scanner, adminService);
+        adminMenu = new AdminMenu(scanner, adminService, flightBookingService);
         passengerMenu = new PassengerMenu(scanner, adminService, passengerService, flightBookingService);
 
         adminService.initializeData();

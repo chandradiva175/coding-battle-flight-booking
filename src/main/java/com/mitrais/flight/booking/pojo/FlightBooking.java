@@ -19,5 +19,6 @@ public class FlightBooking {
     private Destination to;
     private List<FlightBookingDetail> details;
     private BookingStatus bookingStatus;
+    private int scheduleDay;
 
 }

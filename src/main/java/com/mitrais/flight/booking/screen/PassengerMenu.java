@@ -129,6 +129,7 @@ public class PassengerMenu {
                         .to(to)
                         .details(bookingDetails)
                         .bookingStatus(BookingStatus.BOOKED)
+                        .scheduleDay(day)
                         .build();
 
                 flightBookingService.addFlightBooking(booking);

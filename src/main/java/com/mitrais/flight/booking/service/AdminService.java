@@ -61,7 +61,7 @@ public class AdminService {
         route.setDepartureCity(getMapDestination().get("Jakarta"));
         route.setDestinationCity(getMapDestination().get("Bali"));
         route.setAircraft(getMapAircraft().get("Lion Air"));
-        route.setScheduleDay(2);
+        route.setScheduleDay(3);
         addFlightRoute(route);
 
         route = new FlightRoute();
