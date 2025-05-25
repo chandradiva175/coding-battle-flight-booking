@@ -96,4 +96,22 @@ public class FlightBookingService {
                 .collect(Collectors.toList());
     }
 
+    public List<FlightBooking> findBookingByToday(int currentDay) {
+        if (flightBookings == null) return null;
+        return flightBookings.stream()
+                .filter(flightBooking ->  flightBooking.getScheduleDay() == currentDay
+                        || flightBooking.getScheduleDay() == (currentDay + 1))
+                .sorted(Comparator.comparingInt(FlightBooking::getScheduleDay))
+                .collect(Collectors.toList());
+    }
+
+    public void finishBooking(int currentDay) {
+        if (flightBookings != null) {
+            flightBookings.stream()
+                    .filter(flightBooking -> flightBooking.getScheduleDay() == currentDay
+                            && flightBooking.getBookingStatus().equals(BookingStatus.BOOKED))
+                    .forEach(flightBooking -> flightBooking.setBookingStatus(BookingStatus.FINISHED));
+        }
+    }
+
 }

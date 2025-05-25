@@ -4,8 +4,11 @@ import com.mitrais.flight.booking.RunnerComponent;
 import com.mitrais.flight.booking.pojo.*;
 import com.mitrais.flight.booking.service.AdminService;
 import com.mitrais.flight.booking.service.FlightBookingService;
+import com.mitrais.flight.booking.util.BookingStatus;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.stream.Collectors;
 
@@ -62,6 +65,8 @@ public class AdminMenu {
                 showCurrentAndTomorrowBookedFlight();
                 break;
             case 6:
+                showRunFlight();
+                showAdminPanel();
                 break;
             default:
                 RunnerComponent.showWelcomeScreen();
@@ -188,6 +193,83 @@ public class AdminMenu {
         }
 
         showAdminPanel();
+    }
+
+    public void showRunFlight() {
+        int currentDay = adminService.getDay();
+
+        System.out.println("== RUN FLIGHT ==");
+        System.out.printf("Running flights for day %d...\n\n", currentDay);
+
+        List<FlightBooking> bookings = flightBookingService.findBookingByToday(currentDay);
+        if (bookings == null) return;
+
+        List<ProcessFlight> processFlights = transform(bookings);
+        if (!processFlights.isEmpty()) {
+            for (ProcessFlight flight : processFlights) {
+                System.out.printf("Processing flight: %s -> %s\n", flight.getFrom().getName(), flight.getTo().getName());
+                System.out.printf("Aircraft: %s\n", flight.getAircraft().getName());
+
+                System.out.printf("Passengers boarding: %d\n", flight.getPassengerSeats().size());
+                for (PassengerSeat passengerSeat : flight.getPassengerSeats()) {
+                    System.out.printf("- %s (Seat #%d)\n", passengerSeat.getPassengerName(), passengerSeat.getSeat());
+                }
+
+                System.out.println("Flight status: DEPARTED");
+                System.out.println("Flight status: ARRIVED");
+                System.out.printf("All passengers have reached %s.\n\n", flight.getTo().getName());
+            }
+        }
+
+        flightBookingService.finishBooking(currentDay);
+    }
+
+    public List<ProcessFlight> transform(List<FlightBooking> flightBookings) {
+        Map<String, List<FlightBooking>> grouped = flightBookings.stream()
+                .filter(b -> b.getBookingStatus() == BookingStatus.BOOKED)
+                .collect(Collectors.groupingBy(b -> b.getFrom().getCode() + "-" + b.getTo().getCode()));
+
+        List<ProcessFlight> result = new ArrayList<>();
+        for (Map.Entry<String, List<FlightBooking>> entry : grouped.entrySet()) {
+            List<FlightBooking> bookings = entry.getValue();
+
+            if (bookings.isEmpty()) continue;
+
+            FlightBooking firstBooking = bookings.get(0);
+            Destination from = firstBooking.getFrom();
+            Destination to = firstBooking.getTo();
+            boolean isDirect = firstBooking.isDirectFlight();
+
+            List<String> bookingIds = bookings.stream()
+                    .map(FlightBooking::getBookingId)
+                    .collect(Collectors.toList());
+
+            List<PassengerSeat> passengerSeats = bookings.stream()
+                    .flatMap(b -> b.getDetails().stream()
+                            .map(d -> PassengerSeat.builder()
+                                    .passengerName(b.getPassengerName())
+                                    .seat(d.getSeat())
+                                    .build()))
+                    .collect(Collectors.toList());
+
+            Aircraft aircraft = bookings.stream()
+                    .flatMap(b -> b.getDetails().stream())
+                    .map(d -> d.getFlightRoute().getAircraft())
+                    .findFirst()
+                    .orElse(null);
+
+            ProcessFlight pf = new ProcessFlight();
+            pf.setFrom(from);
+            pf.setTo(to);
+            pf.setDirectFlight(isDirect);
+            pf.setAircraft(aircraft);
+            pf.setBookingIds(bookingIds);
+            pf.setPassengerSeats(passengerSeats);
+
+            result.add(pf);
+        }
+
+        return result;
     }
 
 }
